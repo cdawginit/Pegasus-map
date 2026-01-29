@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Pegasus</title>
+
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <!-- CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Overlapping Marker Spiderfier -->
+  <script src="https://cdn.jsdelivr.net/npm/overlapping-marker-spiderfier-leaflet@0.2.7/dist/oms.js"></script>
+
+  <style>
+    :root{
+      --bg:#000;
+      --fg:#fff;
+      --muted: rgba(255,255,255,.88);
+      --muted2: rgba(255,255,255,.78);
+      --border: rgba(255,255,255,.22);
+      --btnbg: rgba(255,255,255,.08);
+      --shadow: 0 14px 34px rgba(0,0,0,.55);
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+
+      /* ✅ Default background (more reliable than uc?export=view) */
+      --pegasus-bg: url("https://drive.google.com/thumbnail?id=1YhcksK1Nz5HB2jO5z92xA7zwrBzS-RhQ&sz=w2400");
+    }
+
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); height: 100%; }
+    body{
+      min-height: 100dvh;
+      font-family: ui-serif, Georgia, "Times New Roman", serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    button{ font-family: inherit; }
+
+    #landing, #mapView{
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100dvh;
+    }
+    #mapView{ display: none; background: #111; }
+
+    /* Landing */
+    #landing{
+      background: #000;
+      overflow: hidden;
+      transition: opacity .35s ease, transform .35s ease;
+      z-index: 10;
+    }
+    #landing.hidden{ opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+    /* ✅ Background image now uses CSS variable (set by JS if a better URL loads) */
+    #landing::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image: var(--pegasus-bg);
+      background-repeat: no-repeat;
+      background-position: right 3% center;
+      background-size: min(72vw, 1100px) auto;
+      opacity: .38;
+      filter: saturate(0) contrast(1.08);
+      pointer-events:none;
+      z-index: 0;
+    }
+    #landing::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(90deg,
+        rgba(0,0,0,.88) 0%,
+        rgba(0,0,0,.82) 40%,
+        rgba(0,0,0,.45) 72%,
+        rgba(0,0,0,.15) 100%
+      );
+      pointer-events:none;
+      z-index: 1;
+    }
+
+    .content{
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      min-height: 100dvh;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding:
+        calc(clamp(16px, 3vw, 44px) + var(--safe-top))
+        calc(clamp(16px, 3vw, 44px) + var(--safe-right))
+        calc(clamp(16px, 3vw, 44px) + var(--safe-bottom))
+        calc(clamp(16px, 3vw, 44px) + var(--safe-left));
+      box-sizing: border-box;
+
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 14px;
+    }
+
+    h1{
+      margin: 0;
+      font-weight: 800;
+      font-size: clamp(34px, 4.8vw, 58px);
+      letter-spacing: .02em;
+      line-height: 1.05;
+      text-shadow: 0 2px 10px rgba(0,0,0,.55);
+    }
+
+    .storyScroll{ overflow: auto; padding-right: 10px; }
+    .storyScroll::-webkit-scrollbar{ width: 10px; }
+    .storyScroll::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius: 999px; }
+    .storyScroll::-webkit-scrollbar-track{ background: transparent; }
+
+    .story{
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: clamp(16px, 1.15vw, 18px);
+      line-height: 1.65;
+      text-shadow: 0 1px 2px rgba(0,0,0,.55);
+    }
+    .story p{ margin: 0 0 12px 0; color: var(--muted2); }
+    .story p:first-child{ color: var(--muted); }
+    .story p:last-child{ margin-bottom: 0; }
+
+    .btn-row{ display:flex; justify-content:flex-end; align-items:end; padding-top:6px; }
+    .btn{
+      min-height: 44px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--btnbg);
+      color: var(--fg);
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.12); box-shadow: 0 18px 44px rgba(0,0,0,.65); }
+    .btn:active{ transform: translateY(0); }
+
+    @media (max-width: 900px){
+      #landing::before{ background-position: center 18%; background-size: 110vw auto; opacity: .22; }
+      #landing::after{
+        background: linear-gradient(180deg,
+          rgba(0,0,0,.86) 0%,
+          rgba(0,0,0,.72) 55%,
+          rgba(0,0,0,.62) 100%
+        );
+      }
+      .content{ max-width: 760px; }
+      .story{ max-width: 70ch; }
+    }
+
+    /* Map */
+    #map{ position:absolute; inset:0; width:100%; height:100%; min-height:100dvh; }
+
+    .topbar{
+      position:absolute;
+      top: calc(12px + var(--safe-top));
+      left: calc(12px + var(--safe-left));
+      z-index: 1000;
+      display:flex;
+      gap:10px;
+      pointer-events:none;
+    }
+    .pill{
+      pointer-events:auto;
+      min-height:44px;
+      display:inline-flex;
+      align-items:center;
+      padding:10px 14px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.55);
+      color: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+      border-radius:999px;
+      font-size:14px;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    }
+
+    .popup-wrap{ font-size:13px; line-height:1.25; }
+    .popup-title{ font-weight:800; margin:0 0 6px 0; font-size:14px; }
+    .popup-line{ margin:2px 0; }
+    .popup-strong{ font-weight:700; }
+    .popup-img{
+      max-width: 280px; width:100%; height:auto;
+      display:block; border-radius:10px;
+      margin: 8px 0 6px 0;
+    }
+
+    @media (pointer: coarse){
+      .leaflet-control-zoom a{
+        width:44px !important;
+        height:44px !important;
+        line-height:44px !important;
+        font-size:18px !important;
+      }
+      .leaflet-control-layers{ font-size:14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      #landing{ transition:none; }
+      .btn{ transition:none; }
+    }
+  </style>
+</head>
+
+<body>
+  <section id="landing" aria-label="Landing page">
+    <div class="content">
+      <h1>Pegasus</h1>
+
+      <div class="storyScroll">
+        <div class="story">
+          <p>Pegasus enters Greek myth in an instant. When Perseus kills Medusa, the winged horse rises from her blood, often described as the child of Medusa and Poseidon, god of the sea and of horses.</p>
+          <p>In later stories he is tamed by Bellerophon and carried into feats no rider could manage alone. After Bellerophon’s victories, pride drives him to attempt the ascent to Olympus, but he falls back to earth while Pegasus continues on. Welcomed among the gods, Pegasus serves Zeus as a bearer of thunder and lightning, and Zeus finally places him among the stars as the constellation that still bears his name.</p>
+          <p>On coinage, Pegasus often works like a signature. At Corinth he is a civic emblem stamped boldly on the city’s staters, linking the polis to Bellerophon and broadcasting Corinthian prestige in a single glance. As Corinth’s colonies and kindred cities struck their own money, many echoed the same Pegasus, often paired with small local symbols, turning the flying horse into a shared badge of Corinthian origin and influence across the sea lanes. As the image spreads across the ancient Mediterranean, Pegasus can signal aspiration and authority, a promise that the issuer aims higher than the ordinary.</p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="enterBtn" class="btn" type="button">Map</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="mapView" aria-label="Map view">
+    <div class="topbar">
+      <div id="backBtn" class="pill">← Back</div>
+    </div>
+    <div id="map"></div>
+  </section>
+
+  <script>
+    // ===== CONFIG =====
+    const CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQd4-zbdMK_u4b7Cf4gCvCvsC0H10rWyBcZ_Y8cfQWv1GwBfuOBErektfQYpBQwd3WelOiEJUUaIjG/pub?gid=0&single=true&output=csv";
+
+    const DARE_TILES = "https://dh.gu.se/tiles/imperium/{z}/{x}/{y}.png";
+
+    const MAP_MIN_ZOOM = 5;
+    const MAP_MAX_ZOOM = 10;
+    const DARE_MIN_NATIVE_ZOOM = 4;
+    const DARE_MAX_NATIVE_ZOOM = 11;
+
+    const DARE_BOUNDS = L.latLngBounds(
+      [-35, -25],
+      [ 75, 165]
+    );
+
+    // ✅ Landing background reliability fix:
+    // Try a few candidate URLs; whichever loads first becomes the CSS background.
+    const PEGASUS_BG_FILE_ID = "1YhcksK1Nz5HB2jO5z92xA7zwrBzS-RhQ";
+    const PEGASUS_BG_CANDIDATES = [
+      `https://drive.google.com/thumbnail?id=${PEGASUS_BG_FILE_ID}&sz=w2400`,          // most reliable
+      `https://drive.google.com/uc?export=view&id=${PEGASUS_BG_FILE_ID}`,              // sometimes works
+      `https://drive.google.com/uc?export=download&id=${PEGASUS_BG_FILE_ID}`           // sometimes works
+    ];
+
+    function setLandingBg(url) {
+      document.documentElement.style.setProperty("--pegasus-bg", `url("${url}")`);
+    }
+
+    (function ensureLandingBgLoads() {
+      let i = 0;
+      const tryNext = () => {
+        if (i >= PEGASUS_BG_CANDIDATES.length) return;
+        const url = PEGASUS_BG_CANDIDATES[i++];
+        const img = new Image();
+        img.referrerPolicy = "no-referrer"; // helps with some hotlink blocking
+        img.onload = () => setLandingBg(url);
+        img.onerror = tryNext;
+        img.src = url;
+      };
+      tryNext();
+    })();
+
+    // ===== HELPERS =====
+    function escapeHTML(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+    function toNum(v) {
+      const n = Number.parseFloat(String(v ?? "").trim());
+      return Number.isFinite(n) ? n : null;
+    }
+    function truthy(v) {
+      const s = String(v ?? "").trim().toLowerCase();
+      return ["true", "1", "yes", "y", "on"].includes(s);
+    }
+    function joinNonEmpty(parts, sep) {
+      return parts.map(p => String(p ?? "").trim()).filter(Boolean).join(sep);
+    }
+    function fmtWeight(v) { const s = String(v ?? "").trim(); return s ? `${s}g` : ""; }
+    function fmtDiam(v)   { const s = String(v ?? "").trim(); return s ? `${s}mm` : ""; }
+    function fmtAxis(v)   { const s = String(v ?? "").trim(); return s ? `${s}` : ""; }
+
+    function normalizeImageUrl(url) {
+      const s = String(url ?? "").trim();
+      if (!s) return "";
+      const m = s.match(/drive\.google\.com\/file\/d\/([^/]+)\//i);
+      if (m && m[1]) return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(m[1])}`;
+      return s;
+    }
+
+    function nudgeLatLng(lat, lng, i) {
+      const step = 0.00012;
+      const angle = i * 0.9;
+      return [lat + Math.cos(angle) * step * i, lng + Math.sin(angle) * step * i];
+    }
+
+    // ===== VIEW TOGGLE + MAP INIT =====
+    const landing = document.getElementById("landing");
+    const mapView = document.getElementById("mapView");
+    const enterBtn = document.getElementById("enterBtn");
+    const backBtn = document.getElementById("backBtn");
+
+    let map = null;
+    let markers = null;
+    let initialized = false;
+    let oms = null;
+
+    function showMap() {
+      landing.classList.add("hidden");
+      mapView.style.display = "block";
+      if (!initialized) { initialized = true; initMap(); }
+      else { setTimeout(() => map.invalidateSize(), 80); }
+    }
+
+    function showLanding() {
+      mapView.style.display = "none";
+      landing.classList.remove("hidden");
+    }
+
+    enterBtn.addEventListener("click", showMap);
+    backBtn.addEventListener("click", showLanding);
+
+    function initMap() {
+      map = L.map("map", {
+        minZoom: MAP_MIN_ZOOM,
+        maxZoom: MAP_MAX_ZOOM,
+        maxBounds: DARE_BOUNDS,
+        maxBoundsViscosity: 1.0
+      }).setView([41.9, 12.5], 5);
+
+      const dareLayer = L.tileLayer(DARE_TILES, {
+        minNativeZoom: DARE_MIN_NATIVE_ZOOM,
+        maxNativeZoom: DARE_MAX_NATIVE_ZOOM,
+        bounds: DARE_BOUNDS,
+        noWrap: true,
+        attribution: 'Basemap: Digital Atlas of the Roman Empire (DARE) | Data: Google Sheet CSV'
+      }).addTo(map);
+
+      const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+      });
+
+      L.control.layers(
+        { "DARE (Ancient)": dareLayer, "OpenStreetMap (Modern)": osmLayer },
+        {}
+      ).addTo(map);
+
+      L.control.scale().addTo(map);
+
+      markers = L.layerGroup().addTo(map);
+
+      if (typeof window.OverlappingMarkerSpiderfier === "function") {
+        oms = new OverlappingMarkerSpiderfier(map, {
+          keepSpiderfied: true,
+          nearbyDistance: 18,
+          circleSpiralSwitchover: 12
+        });
+        oms.addListener("click", function(marker) { marker.openPopup(); });
+      } else {
+        oms = null;
+      }
+
+      setTimeout(() => map.invalidateSize(), 150);
+      window.addEventListener("resize", () => setTimeout(() => map && map.invalidateSize(), 120), { passive: true });
+      window.addEventListener("orientationchange", () => setTimeout(() => map && map.invalidateSize(), 200), { passive: true });
+
+      loadAndPlot();
+    }
+
+    async function loadAndPlot() {
+      let csvText;
+      try {
+        const res = await fetch(CSV_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error(`CSV fetch failed: ${res.status} ${res.statusText}`);
+        csvText = await res.text();
+      } catch (e) {
+        console.error(e);
+        alert("Could not fetch the CSV. If you see a CORS error, serve this page from a local web server (not file://).");
+        return;
+      }
+
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+      const rows = parsed.data ?? [];
+
+      const bounds = [];
+      const dupCounter = new Map();
+
+      for (const row of rows) {
+        if ("show_on_map" in row) {
+          const v = String(row.show_on_map ?? "").trim();
+          if (v !== "" && !truthy(v)) continue; // blank means "show"
+        }
+
+        let lat = toNum(row.latitude ?? row.lat ?? row.Latitude ?? row.Lat);
+        let lng = toNum(row.longitude ?? row.lng ?? row.lon ?? row.long ?? row.Longitude ?? row.Lng);
+        if (lat == null || lng == null) continue;
+
+        const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+        const count = (dupCounter.get(key) ?? 0) + 1;
+        dupCounter.set(key, count);
+
+        if (!oms && count > 1) [lat, lng] = nudgeLatLng(lat, lng, count - 1);
+
+        const coinName = String(row.coin_name ?? "").trim();
+        const denom = String(row.denomination ?? "").trim();
+        const titleLine = coinName || denom || "Coin";
+
+        const city = String(row.location_city ?? "").trim();
+        const region = String(row.location_region ?? "").trim();
+        const circa = String(row.circa ?? "").trim();
+
+        const weight = fmtWeight(row.weight_g);
+        const diam = fmtDiam(row.diameter_mm);
+        const axis = fmtAxis(row.strike_orientation);
+
+        const obv = String(row.obverse_description ?? "").trim();
+        const rev = String(row.reverse_description ?? "").trim();
+        const type = String(row.type ?? "").trim();
+        const condition = String(row.condition ?? "").trim();
+        const commentary = String(row.commentary ?? "").trim();
+
+        const rawImg = row.Image ?? row.image ?? "";
+        const imgForTag = normalizeImageUrl(rawImg);
+
+        const place = joinNonEmpty([city, region], ", ");
+        const placeDateLine = joinNonEmpty([place, circa], " - ");
+        const metricsLine = joinNonEmpty([weight, diam, axis], ", ");
+
+        const lines = [];
+        if (placeDateLine) lines.push(`<div class="popup-line">${escapeHTML(placeDateLine)}</div>`);
+        if (metricsLine) lines.push(`<div class="popup-line">${escapeHTML(metricsLine)}</div>`);
+        if (obv) lines.push(`<div class="popup-line"><span class="popup-strong">Obverse:</span> ${escapeHTML(obv)}</div>`);
+        if (rev) lines.push(`<div class="popup-line"><span class="popup-strong">Reverse:</span> ${escapeHTML(rev)}</div>`);
+        if (type) lines.push(`<div class="popup-line"><span class="popup-strong">Type:</span> ${escapeHTML(type)}</div>`);
+        if (condition) lines.push(`<div class="popup-line"><span class="popup-strong">Condition:</span> ${escapeHTML(condition)}</div>`);
+        if (commentary) lines.push(`<div class="popup-line"><span class="popup-strong">Commentary:</span> ${escapeHTML(commentary)}</div>`);
+
+        const popupHTML = `
+          <div class="popup-wrap">
+            <div class="popup-title">${escapeHTML(titleLine)}</div>
+            ${imgForTag ? `<img class="popup-img" src="${escapeHTML(imgForTag)}" alt="">` : ""}
+            ${lines.join("")}
+          </div>
+        `;
+
+        const m = L.marker([lat, lng]).bindPopup(popupHTML, { maxWidth: 360 });
+        m.addTo(markers);
+        if (oms) oms.addMarker(m);
+
+        bounds.push([lat, lng]);
+      }
+
+      if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: MAP_MAX_ZOOM });
+      else alert("No points plotted. Check latitude/longitude values, and show_on_map if you’re using it.");
+    }
+  </script>
+</body>
+</html>
