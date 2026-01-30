@@ -39,7 +39,6 @@
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-left: env(safe-area-inset-left, 0px);
 
-      /* ✅ Default background (more reliable than uc?export=view) */
       --pegasus-bg: url("https://drive.google.com/thumbnail?id=1YhcksK1Nz5HB2jO5z92xA7zwrBzS-RhQ&sz=w2400");
     }
 
@@ -69,7 +68,6 @@
     }
     #landing.hidden{ opacity: 0; transform: translateY(-6px); pointer-events: none; }
 
-    /* ✅ Background image now uses CSS variable (set by JS if a better URL loads) */
     #landing::before{
       content:"";
       position:absolute;
@@ -131,7 +129,7 @@
     .storyScroll::-webkit-scrollbar-track{ background: transparent; }
 
     .story{
-      max-width: 58ch;
+      max-width: 62ch;
       color: var(--muted);
       font-size: clamp(16px, 1.15vw, 18px);
       line-height: 1.65;
@@ -167,7 +165,7 @@
         );
       }
       .content{ max-width: 760px; }
-      .story{ max-width: 70ch; }
+      .story{ max-width: 72ch; }
     }
 
     /* Map */
@@ -209,6 +207,107 @@
       margin: 8px 0 6px 0;
     }
 
+    /* Legend */
+    .legend{
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.55);
+      color: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.15;
+      max-width: 220px;
+    }
+    .legend-title{
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: .02em;
+    }
+    .legend-item{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .legend-swatch{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.7);
+      flex: 0 0 auto;
+    }
+
+    /* Period Filter */
+    .filterbox{
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.55);
+      color: rgba(255,255,255,.92);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 13px;
+      max-width: 240px;
+    }
+    .filter-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .filter-title{
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+    .filter-actions{
+      display:flex;
+      gap:8px;
+    }
+    .filter-actions button{
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.92);
+      border-radius: 999px;
+      padding: 6px 10px;
+      cursor:pointer;
+      font-size:12px;
+      line-height:1;
+    }
+    .filter-actions button:hover{ background: rgba(255,255,255,.12); }
+
+    .filter-list{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      max-height: 220px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .filter-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .filter-item input{ transform: translateY(1px); }
+    .filter-dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.7);
+      flex: 0 0 auto;
+    }
+
     @media (pointer: coarse){
       .leaflet-control-zoom a{
         width:44px !important;
@@ -217,11 +316,6 @@
         font-size:18px !important;
       }
       .leaflet-control-layers{ font-size:14px; }
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      #landing{ transition:none; }
-      .btn{ transition:none; }
     }
   </style>
 </head>
@@ -233,9 +327,9 @@
 
       <div class="storyScroll">
         <div class="story">
-          <p>Pegasus enters Greek myth in an instant. When Perseus kills Medusa, the winged horse rises from her blood, often described as the child of Medusa and Poseidon, god of the sea and of horses.</p>
-          <p>In later stories he is tamed by Bellerophon and carried into feats no rider could manage alone. After Bellerophon’s victories, pride drives him to attempt the ascent to Olympus, but he falls back to earth while Pegasus continues on. Welcomed among the gods, Pegasus serves Zeus as a bearer of thunder and lightning, and Zeus finally places him among the stars as the constellation that still bears his name.</p>
-          <p>On coinage, Pegasus often works like a signature. At Corinth he is a civic emblem stamped boldly on the city’s staters, linking the polis to Bellerophon and broadcasting Corinthian prestige in a single glance. As Corinth’s colonies and kindred cities struck their own money, many echoed the same Pegasus, often paired with small local symbols, turning the flying horse into a shared badge of Corinthian origin and influence across the sea lanes. As the image spreads across the ancient Mediterranean, Pegasus can signal aspiration and authority, a promise that the issuer aims higher than the ordinary.</p>
+          <p>Pegasus rises from Medusa’s blood as she is slain by Perseus. He is the child of the Gorgon whose gaze turns the living to stone, and of Poseidon, god of the sea and the untamed force of horses. He is not a cruel accident, but a revelation, released by fate and marked from the first breath with a divine lineage.</p>
+          <p>Bellerophon tames Pegasus and rides him into feats no rider could manage alone, most famously the slaying of the Chimera, struck down from above where its fire could not reach. After Bellerophon’s victories, pride draws him toward Olympus, but he falls back to earth while Pegasus continues on. Welcomed among the gods, Pegasus serves Zeus as a bearer of thunder and lightning, and is finally set among the stars as the constellation that still bears his name.</p>
+          <p>On coinage, Pegasus becomes a symbol of swift power and divine favor. At Corinth he is a civic emblem stamped boldly on the city’s staters, linking the polis to Bellerophon and broadcasting Corinthian prestige at a glance. As Corinth’s colonies and kindred cities struck their own money, many echoed the same Pegasus, often paired with small local symbols, turning the flying horse into a shared badge of Corinthian origin and influence across the sea lanes. As it spread across the ancient Mediterranean, Pegasus became a shorthand for the divine: a shared emblem of exalted origins, speed, and rightful power.</p>
         </div>
       </div>
 
@@ -259,7 +353,7 @@
 
     const DARE_TILES = "https://dh.gu.se/tiles/imperium/{z}/{x}/{y}.png";
 
-    const MAP_MIN_ZOOM = 5;
+    const MAP_MIN_ZOOM = 6;
     const MAP_MAX_ZOOM = 10;
     const DARE_MIN_NATIVE_ZOOM = 4;
     const DARE_MAX_NATIVE_ZOOM = 11;
@@ -269,26 +363,23 @@
       [ 75, 165]
     );
 
-    // ✅ Landing background reliability fix:
-    // Try a few candidate URLs; whichever loads first becomes the CSS background.
+    // ===== Landing background reliability fix =====
     const PEGASUS_BG_FILE_ID = "1YhcksK1Nz5HB2jO5z92xA7zwrBzS-RhQ";
     const PEGASUS_BG_CANDIDATES = [
-      `https://drive.google.com/thumbnail?id=${PEGASUS_BG_FILE_ID}&sz=w2400`,          // most reliable
-      `https://drive.google.com/uc?export=view&id=${PEGASUS_BG_FILE_ID}`,              // sometimes works
-      `https://drive.google.com/uc?export=download&id=${PEGASUS_BG_FILE_ID}`           // sometimes works
+      `https://drive.google.com/thumbnail?id=${PEGASUS_BG_FILE_ID}&sz=w2400`,
+      `https://drive.google.com/uc?export=view&id=${PEGASUS_BG_FILE_ID}`,
+      `https://drive.google.com/uc?export=download&id=${PEGASUS_BG_FILE_ID}`
     ];
-
     function setLandingBg(url) {
       document.documentElement.style.setProperty("--pegasus-bg", `url("${url}")`);
     }
-
     (function ensureLandingBgLoads() {
       let i = 0;
       const tryNext = () => {
         if (i >= PEGASUS_BG_CANDIDATES.length) return;
         const url = PEGASUS_BG_CANDIDATES[i++];
         const img = new Image();
-        img.referrerPolicy = "no-referrer"; // helps with some hotlink blocking
+        img.referrerPolicy = "no-referrer";
         img.onload = () => setLandingBg(url);
         img.onerror = tryNext;
         img.src = url;
@@ -296,7 +387,51 @@
       tryNext();
     })();
 
-    // ===== HELPERS =====
+    // ===== Period colors + icons =====
+    const PERIOD_COLORS = {
+      Archaic:      "#ff6b6b",
+      Classical:    "#4dabf7",
+      Hellenistic:  "#51cf66",
+      Roman:        "#ffd43b",
+      Byzantine:    "#9775fa",
+      Unknown:      "#adb5bd"
+    };
+    const FALLBACK_PALETTE = ["#ff6b6b","#4dabf7","#51cf66","#ffd43b","#9775fa","#ffa94d","#63e6be","#74c0fc","#ff8787"];
+
+    function hashString(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return h;
+    }
+    function colorForPeriod(periodRaw) {
+      const p = (periodRaw || "Unknown").trim() || "Unknown";
+      if (PERIOD_COLORS[p]) return PERIOD_COLORS[p];
+      return FALLBACK_PALETTE[hashString(p) % FALLBACK_PALETTE.length];
+    }
+
+    const ICON_CACHE = new Map();
+    function iconForColor(color) {
+      if (ICON_CACHE.has(color)) return ICON_CACHE.get(color);
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="41" viewBox="0 0 26 41">
+          <path d="M13 0C5.8 0 0 5.8 0 13c0 9.8 13 28 13 28s13-18.2 13-28C26 5.8 20.2 0 13 0z"
+                fill="${color}" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>
+          <circle cx="13" cy="13" r="4.8" fill="rgba(0,0,0,0.35)"/>
+        </svg>
+      `.trim();
+
+      const icon = L.icon({
+        iconUrl: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+        iconSize: [26, 41],
+        iconAnchor: [13, 41],
+        popupAnchor: [0, -34]
+      });
+
+      ICON_CACHE.set(color, icon);
+      return icon;
+    }
+
+    // ===== Helpers =====
     function escapeHTML(str) {
       return String(str ?? "")
         .replaceAll("&", "&amp;")
@@ -334,14 +469,13 @@
       return [lat + Math.cos(angle) * step * i, lng + Math.sin(angle) * step * i];
     }
 
-    // ===== VIEW TOGGLE + MAP INIT =====
+    // ===== View toggle =====
     const landing = document.getElementById("landing");
     const mapView = document.getElementById("mapView");
     const enterBtn = document.getElementById("enterBtn");
     const backBtn = document.getElementById("backBtn");
 
     let map = null;
-    let markers = null;
     let initialized = false;
     let oms = null;
 
@@ -351,14 +485,83 @@
       if (!initialized) { initialized = true; initMap(); }
       else { setTimeout(() => map.invalidateSize(), 80); }
     }
-
     function showLanding() {
       mapView.style.display = "none";
       landing.classList.remove("hidden");
     }
-
     enterBtn.addEventListener("click", showMap);
     backBtn.addEventListener("click", showLanding);
+
+    // ===== Period layers + legend + filter =====
+    const periodLayers = {}; // period -> LayerGroup
+    let legendControl = null;
+
+    let filterControl = null;
+    let filterListEl = null;
+
+    function updateLegend() {
+      if (!legendControl) return;
+      const el = legendControl.getContainer();
+      const keys = Object.keys(periodLayers).sort((a,b) => a.localeCompare(b));
+      const items = keys.map(k => {
+        const c = colorForPeriod(k);
+        return `<div class="legend-item" title="${escapeHTML(k)}">
+                  <span class="legend-swatch" style="background:${c}"></span>
+                  <span>${escapeHTML(k)}</span>
+                </div>`;
+      }).join("");
+
+      el.innerHTML = `
+        <div class="legend-title">Time periods</div>
+        ${items || `<div style="opacity:.8">No periods yet</div>`}
+      `;
+    }
+
+    function renderFilter() {
+      if (!filterListEl) return;
+
+      const keys = Object.keys(periodLayers).sort((a,b) => a.localeCompare(b));
+      filterListEl.innerHTML = keys.map(k => {
+        const checked = map.hasLayer(periodLayers[k]) ? "checked" : "";
+        const c = colorForPeriod(k);
+        const id = "p_" + hashString(k);
+        return `
+          <label class="filter-item" title="${escapeHTML(k)}">
+            <input type="checkbox" data-period="${escapeHTML(k)}" id="${id}" ${checked}/>
+            <span class="filter-dot" style="background:${c}"></span>
+            <span style="overflow:hidden;text-overflow:ellipsis">${escapeHTML(k)}</span>
+          </label>
+        `;
+      }).join("");
+
+      filterListEl.querySelectorAll('input[type="checkbox"][data-period]').forEach(cb => {
+        cb.addEventListener("change", (e) => {
+          const period = e.target.getAttribute("data-period");
+          const layer = periodLayers[period];
+          if (!layer) return;
+          if (e.target.checked) map.addLayer(layer);
+          else map.removeLayer(layer);
+        });
+      });
+    }
+
+    function setAllPeriods(on) {
+      Object.keys(periodLayers).forEach(k => {
+        if (on) map.addLayer(periodLayers[k]);
+        else map.removeLayer(periodLayers[k]);
+      });
+      renderFilter();
+    }
+
+    function getPeriodLayer(name) {
+      const key = (name || "Unknown").trim() || "Unknown";
+      if (!periodLayers[key]) {
+        periodLayers[key] = L.layerGroup().addTo(map); // default ON
+        updateLegend();
+        renderFilter();
+      }
+      return periodLayers[key];
+    }
 
     function initMap() {
       map = L.map("map", {
@@ -366,7 +569,7 @@
         maxZoom: MAP_MAX_ZOOM,
         maxBounds: DARE_BOUNDS,
         maxBoundsViscosity: 1.0
-      }).setView([41.9, 12.5], 5);
+      }).setView([41.9, 12.5], 6);
 
       const dareLayer = L.tileLayer(DARE_TILES, {
         minNativeZoom: DARE_MIN_NATIVE_ZOOM,
@@ -386,9 +589,44 @@
         {}
       ).addTo(map);
 
-      L.control.scale().addTo(map);
+      legendControl = L.control({ position: "bottomright" });
+      legendControl.onAdd = function() {
+        const div = L.DomUtil.create("div", "legend");
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+        return div;
+      };
+      legendControl.addTo(map);
+      updateLegend();
 
-      markers = L.layerGroup().addTo(map);
+      filterControl = L.control({ position: "topright" });
+      filterControl.onAdd = function() {
+        const div = L.DomUtil.create("div", "filterbox");
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+
+        div.innerHTML = `
+          <div class="filter-head">
+            <div class="filter-title">Periods</div>
+            <div class="filter-actions">
+              <button type="button" id="btnAll">All</button>
+              <button type="button" id="btnNone">None</button>
+            </div>
+          </div>
+          <div class="filter-list" id="periodList">
+            <div style="opacity:.8">Loading…</div>
+          </div>
+        `;
+
+        filterListEl = div.querySelector("#periodList");
+        div.querySelector("#btnAll").addEventListener("click", () => setAllPeriods(true));
+        div.querySelector("#btnNone").addEventListener("click", () => setAllPeriods(false));
+
+        return div;
+      };
+      filterControl.addTo(map);
+
+      L.control.scale().addTo(map);
 
       if (typeof window.OverlappingMarkerSpiderfier === "function") {
         oms = new OverlappingMarkerSpiderfier(map, {
@@ -429,7 +667,7 @@
       for (const row of rows) {
         if ("show_on_map" in row) {
           const v = String(row.show_on_map ?? "").trim();
-          if (v !== "" && !truthy(v)) continue; // blank means "show"
+          if (v !== "" && !truthy(v)) continue;
         }
 
         let lat = toNum(row.latitude ?? row.lat ?? row.Latitude ?? row.Lat);
@@ -439,7 +677,6 @@
         const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
         const count = (dupCounter.get(key) ?? 0) + 1;
         dupCounter.set(key, count);
-
         if (!oms && count > 1) [lat, lng] = nudgeLatLng(lat, lng, count - 1);
 
         const coinName = String(row.coin_name ?? "").trim();
@@ -484,12 +721,21 @@
           </div>
         `;
 
-        const m = L.marker([lat, lng]).bindPopup(popupHTML, { maxWidth: 360 });
-        m.addTo(markers);
+        const period = String(row.period ?? row.time_period ?? "Unknown").trim() || "Unknown";
+        const color = colorForPeriod(period);
+        const layer = getPeriodLayer(period);
+
+        const m = L.marker([lat, lng], { icon: iconForColor(color) })
+          .bindPopup(popupHTML, { maxWidth: 360 });
+
+        m.addTo(layer);
         if (oms) oms.addMarker(m);
 
         bounds.push([lat, lng]);
       }
+
+      updateLegend();
+      renderFilter();
 
       if (bounds.length) map.fitBounds(bounds, { padding: [30, 30], maxZoom: MAP_MAX_ZOOM });
       else alert("No points plotted. Check latitude/longitude values, and show_on_map if you’re using it.");
